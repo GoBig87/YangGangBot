@@ -10,6 +10,8 @@ class Post(Document):
 
 class RedditCrawler():
     def __init__(self):
+        #From mongoengine, connects to DB
+        connect('yang_database')
         self.subreddits = []
         self.reddit = praw.Reddit(client_id="INSERT ID HERE",
                              client_secret='INSERT CLIENT KEY HERE',

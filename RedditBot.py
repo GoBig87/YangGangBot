@@ -82,3 +82,8 @@ class RedditBot():
 
             # Sleep 10 minutes
             time.sleep(600)
+
+# unit test
+if __name__ == "__main__":
+    rb =  RedditBot()
+    rb.run()

@@ -43,10 +43,10 @@ class RedditCrawler():
 
 
     def run(self):
-        #while True:
-        self.getPosts()
+        while True:
+            self.getPosts()
             #Sleep 10 minutes between crawls
-            #time.sleep(600)
+            time.sleep(600)
 
 # unit test
 if __name__ == "__main__":

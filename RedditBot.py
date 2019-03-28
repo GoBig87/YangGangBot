@@ -26,7 +26,7 @@ class RedditBot():
         self.subreddits = ['politics','democrats','PoliticalHumor']
         self.platforms  = ["Twitter","RSS"]
         self.currentPostID = ''
-        self.currentDate = (datetime.fromtimestamp(time.time()- 7*3600)).strftime('%m %d %Y')
+        self.currentDate = (datetime.fromtimestamp(time.time())).strftime('%m %d %Y')
         self.reddit = praw.Reddit(client_id="soXdD-RwcsgTPA",
                              client_secret='BWLl9zDrpDrDDFc-OUqKYd-AD84',
                              user_agent='The Yang Gang Bot',
@@ -92,9 +92,9 @@ class RedditBot():
             print("RedditBot: Strarting Reddit bot")
             if self.currentPostID == "":
                 self.makePost()
-            if self.currentDate != (datetime.fromtimestamp(time.time()- 7*3600)).strftime('%m %d %Y'):
+            if self.currentDate != (datetime.fromtimestamp(time.time())).strftime('%m %d %Y'):
                 self.makePost()
-                self.currentDate = (datetime.fromtimestamp(time.time()- 7*3600)).strftime('%m %d %Y')
+                self.currentDate = (datetime.fromtimestamp(time.time())).strftime('%m %d %Y')
             else:
                 print("RedditBot: Searching DataBase")
                 self.searchDatabase()

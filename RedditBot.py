@@ -1,7 +1,11 @@
 import praw
-import datetime
+from datetime import datetime
 import mongoengine
 import time
+from threading import Thread
+
+# my imports
+from RedditCrawler import RedditCrawler
 
 #This Class is the mongoDB structure
 class Post(mongoengine.Document):
@@ -22,7 +26,7 @@ class RedditBot():
         self.subreddits = ['politics','democrats','PoliticalHumor']
         self.platforms  = ["Twitter","RSS"]
         self.currentPostID = ''
-        self.currentDate = datetime.datetime.today().strftime('%m %d %Y')
+        self.currentDate = (datetime.fromtimestamp(time.time()- 7*3600)).strftime('%m %d %Y')
         self.reddit = praw.Reddit(client_id="soXdD-RwcsgTPA",
                              client_secret='BWLl9zDrpDrDDFc-OUqKYd-AD84',
                              user_agent='The Yang Gang Bot',
@@ -31,26 +35,18 @@ class RedditBot():
 
     # This function needs to run once a day
     def makePost(self):
+        print("RedditBot: Making Daily Post")
         postTitle = "The Daily Andrew Yang Run Down %s " % self.currentDate
 
-        text = 'This post is a megapost that gets updated through '
-        'out the day whenever u/TheYangGangBot finds '
-        'information on the internet and social media.'
-        ' When the bot finds information it will make a '
-        'comment in this post linking'
-        'to the information.'
+        text = 'This post is a megapost that gets updated through ' \
+               'out the day whenever u/TheYangGangBot finds ' \
+               'information on the internet and social media.' \
+               ' When the bot finds information it will make a '\
+               'comment in this post linking to the information.'
 
-        submission = self.reddit.subreddit('YangForPresidentHQ').submit(postTitle, selftext=text)
+        submission = self.reddit.subreddit('testingground4bots').submit(postTitle, selftext=text)
         self.currentPostID = submission.id
-        #Make Initial Comments to break down subreddits and social media platforms
-        for subreddit in self.subreddits:
-            time.sleep(10) #Our bot is rate limited ATM
-            #self.reddit.submission(id=submission).reply("Posts from r/%s" % subreddit)
-            submission.reply("Posts from %s" % subreddit)
-        for platform in self.platforms:
-            time.sleep(10)  # Our bot is rate limited ATM
-            #self.reddit.submission(id=submission).reply("Posts from %s" % subreddit)
-            submission.reply("Posts from %s" % platform)
+        print("RedditBot: Daily Post Made")
 
     # Function to Place post url's in the current posts comment with the
     # matching subreddit
@@ -58,11 +54,20 @@ class RedditBot():
         currentSubmission = self.reddit.submission(id=self.currentPostID)
         postSubmission = self.reddit.submission(id=postID)
         #Cycle through top level comments to find the right section to reply
+        found = False
         for comment in currentSubmission.comments:
             # Check to make sure the comment is TheYangGangBot and the comment contains the subreddit
             if comment.author == "TheYangGangBot" and str(postSubmission.subreddit).upper() in comment.body.upper():
                 url = " https://np.reddit.com"+postSubmission.permalink
                 comment.reply(url)
+                print("RedditBot: Making comment %s" % url)
+                found = True
+        if not found:
+            comment = currentSubmission.reply("Posts from %s" % postSubmission.subreddit)
+            url = " https://np.reddit.com" + postSubmission.permalink
+            print("RedditBot: Making comment %s" % url)
+            time.sleep(10)
+            comment.reply(url)
 
     def makeTwitterComment(self):
         pass
@@ -72,6 +77,7 @@ class RedditBot():
         for post in Post.objects:
             if post.PostStatus == 0:
                 if post.Platform == "Reddit":
+                    print("RedditBot: Reddit Post Found")
                     self.makeSubRedditComment(post.PostID)
                     post.update(PostStatus = 1)
                 if post.Platform == "Twitter":
@@ -79,16 +85,22 @@ class RedditBot():
 
     # Run this function forever
     def run(self):
+        rc = RedditCrawler()
+        thread = Thread(target=rc.runCrawler)
+        thread.start()
         while True:
+            print("RedditBot: Strarting Reddit bot")
             if self.currentPostID == "":
                 self.makePost()
-            if self.currentDate != datetime.datetime.today().strftime('%m %d %Y'):
+            if self.currentDate != (datetime.fromtimestamp(time.time()- 7*3600)).strftime('%m %d %Y'):
                 self.makePost()
-                self.currentDate = datetime.datetime.today().strftime('%m %d %Y')
+                self.currentDate = (datetime.fromtimestamp(time.time()- 7*3600)).strftime('%m %d %Y')
             else:
+                print("RedditBot: Searching DataBase")
                 self.searchDatabase()
-                # Sleep 10 minutes
-            time.sleep(600)
+            print("RedditBot: Sleeping 15 minutes")
+            time.sleep(900)
+        rc.running = False
 
 # unit test
 if __name__ == "__main__":

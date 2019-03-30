@@ -13,6 +13,14 @@ class Post(mongoengine.Document):
     PostID   = mongoengine.StringField(required=True)
     PostStatus = mongoengine.IntField(default=0)
 
+class UserCount(mongoengine.Document):
+    Month = mongoengine.IntField(default=0)
+    Day   = mongoengine.IntField(default=0)
+    Year  = mongoengine.IntField(default=0)
+    Hour  = mongoengine.IntField(default=0)
+    Min   = mongoengine.IntField(default=0)
+    count = mongoengine.IntField(default=0)
+
 #Maybe we should archive posts after theyve been posted?
 class Archive(mongoengine.Document):
     Platform = mongoengine.StringField(default="Reddit")
@@ -44,7 +52,21 @@ class RedditBot():
                ' When the bot finds information it will make a '\
                'comment in this post linking to the information.'
 
-        submission = self.reddit.subreddit('testingground4bots').submit(postTitle, selftext=text)
+        # Catches rate limit error
+        try:
+            submission = self.reddit.subreddit('testingground4bots').submit(postTitle, selftext=text)
+        except praw.exceptions.APIException as e:
+            if e.error_type == "RATELIMIT":
+                print("RedditBot: Ratelimited, %s" % e.message)
+                wait_time = e.message.strip('you are doing that too much. try again in ').strip('.').split(' ')
+                if wait_time[1] == 'seconds':
+                    time.sleep(int(wait_time[0])+2)
+                else:
+                    time.sleep(int(wait_time[0])*60+60)
+                print("RedditBot: Retrying post")
+                submission = self.reddit.subreddit('testingground4bots').submit(postTitle, selftext=text)
+            else:
+                print(e)
         self.currentPostID = submission.id
         print("RedditBot: Daily Post Made")
 
@@ -59,15 +81,18 @@ class RedditBot():
             # Check to make sure the comment is TheYangGangBot and the comment contains the subreddit
             if comment.author == "TheYangGangBot" and str(postSubmission.subreddit).upper() in comment.body.upper():
                 url = " https://np.reddit.com"+postSubmission.permalink
-                comment.reply(url)
+                self.sendPrawCommand(comment.reply, url)
                 print("RedditBot: Making comment %s" % url)
                 found = True
         if not found:
-            comment = currentSubmission.reply("Posts from %s" % postSubmission.subreddit)
+            reply = "Posts from %s" % postSubmission.subreddit
+            comment = self.sendPrawCommand(currentSubmission.reply,reply)
             url = " https://np.reddit.com" + postSubmission.permalink
             print("RedditBot: Making comment %s" % url)
-            time.sleep(10)
-            comment.reply(url)
+            self.sendPrawCommand(comment.reply,url)
+
+
+
 
     def makeTwitterComment(self):
         pass
@@ -83,6 +108,31 @@ class RedditBot():
                 if post.Platform == "Twitter":
                     self.makeTwitterComment()
 
+    def getActiveUsers(self):
+        timeList = datetime.fromtimestamp(time.time()).strftime('%m:%d:%Y:%H:%M').split(':')
+        usercount = UserCount(Month=timeList[0],Day=timeList[1],Year=timeList[2],Hour=timeList[3],Min=timeList[4])
+        usercount.save()
+        subreddit = self.reddit.subreddit('YangForPresidentHQ')
+        active_users = int(subreddit.active_user_count)
+        print("RedditBot: Active users in YangForPresidentHQ %i" % active_users)
+        usercount.update(count=active_users)
+
+    def sendPrawCommand(self,command,input):
+        try:
+            return command(input)
+        except praw.exceptions.APIException as e:
+            if e.error_type == "RATELIMIT":
+                print("RedditBot: Ratelimited, %s" % e.message)
+                wait_time = e.message.strip('you are doing that too much. try again in ').strip('.').split(' ')
+                if wait_time[1] == 'seconds':
+                    time.sleep(int(wait_time[0]))
+                else:
+                    time.sleep(int(wait_time[0])*60+60)
+                print("RedditBot: Retrying PRAW command")
+                return command(input)
+            else:
+                print(e)
+
     # Run this function forever
     def run(self):
         rc = RedditCrawler()
@@ -93,11 +143,14 @@ class RedditBot():
             if self.currentPostID == "":
                 self.makePost()
             if self.currentDate != (datetime.fromtimestamp(time.time())).strftime('%m %d %Y'):
-                self.makePost()
+                print("RedditBot: Starting a new Day!")
                 self.currentDate = (datetime.fromtimestamp(time.time())).strftime('%m %d %Y')
+                self.makePost()
             else:
                 print("RedditBot: Searching DataBase")
                 self.searchDatabase()
+                self.getActiveUsers()
+
             print("RedditBot: Sleeping 15 minutes")
             time.sleep(900)
         rc.running = False

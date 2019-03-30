@@ -15,7 +15,7 @@ class RedditCrawler():
         self.running = True
         mongoengine.connect('yang_database')
 
-        self.subreddits = ["yangforpresidenthq", "asklibertarians", "classical_liberals",
+        self.subreddits = ["asklibertarians", "classical_liberals",
                            "goldandblack", "libertarian", "libertariandebates",
                            "libertarianmeme", "libertarianpartyusa", "shitstatistssay",
                            "WorldNews","News","WorldPolitics","WorldEvents","Business",
@@ -82,7 +82,8 @@ class RedditCrawler():
                 currentDate =datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d')
                 if postDate == currentDate:
                    currentSubmission = submission.title.upper()
-                   if "YANG" in submission.title.upper():
+                   # Keep this like \sYANG.  The space weeds out things like Pyongyang
+                   if " YANG" in submission.title.upper():
                        if Post.objects(PostID=submission.id).count():
                             print("RedditCrawler: Print Post already in DB")
                        else:

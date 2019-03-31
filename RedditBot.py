@@ -33,7 +33,7 @@ class RedditBot():
         mongoengine.connect('yang_database')
         self.subreddits = ['politics','democrats','PoliticalHumor']
         self.platforms  = ["Twitter","RSS"]
-        self.currentPostID = ''
+        self.currentPostID = 'b7a4db'
         self.currentDate = (datetime.fromtimestamp(time.time())).strftime('%m %d %Y')
         self.reddit = praw.Reddit(client_id="soXdD-RwcsgTPA",
                              client_secret='BWLl9zDrpDrDDFc-OUqKYd-AD84',
@@ -54,7 +54,7 @@ class RedditBot():
 
         # Catches rate limit error
         try:
-            submission = self.reddit.subreddit('testingground4bots').submit(postTitle, selftext=text)
+            submission = self.reddit.subreddit('YangForPresidentHQ').submit(postTitle, selftext=text)
         except praw.exceptions.APIException as e:
             if e.error_type == "RATELIMIT":
                 print("RedditBot: Ratelimited, %s" % e.message)
@@ -79,7 +79,7 @@ class RedditBot():
         found = False
         for comment in currentSubmission.comments:
             # Check to make sure the comment is TheYangGangBot and the comment contains the subreddit
-            if comment.author == "TheYangGangBot" and str(postSubmission.subreddit).upper() in comment.body.upper():
+            if comment.author == "TheYangGangBot" and str(' '.join(postSubmission.subreddit).upper()) in comment.body.upper():
                 url = " https://np.reddit.com"+postSubmission.permalink
                 self.sendPrawCommand(comment.reply, url)
                 print("RedditBot: Making comment %s" % url)
@@ -125,7 +125,7 @@ class RedditBot():
                 print("RedditBot: Ratelimited, %s" % e.message)
                 wait_time = e.message.strip('you are doing that too much. try again in ').strip('.').split(' ')
                 if wait_time[1] == 'seconds':
-                    time.sleep(int(wait_time[0]))
+                    time.sleep(int(wait_time[0])+2)
                 else:
                     time.sleep(int(wait_time[0])*60+60)
                 print("RedditBot: Retrying PRAW command")

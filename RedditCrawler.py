@@ -100,10 +100,13 @@ class RedditCrawler():
 
     def runCrawler(self):
         while self.running:
-            self.getPosts()
-            #Sleep 10 minutes between crawls
-            print("RedditCrawler: Sleeping 15 minute")
-            time.sleep(900)
+            try:
+                self.getPosts()
+                #Sleep 10 minutes between crawls
+                print("RedditCrawler: Sleeping 15 minute")
+                time.sleep(900)
+            except:
+                pass
 
 # unit test
 if __name__ == "__main__":

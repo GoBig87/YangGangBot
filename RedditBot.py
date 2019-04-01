@@ -33,7 +33,7 @@ class RedditBot():
         mongoengine.connect('yang_database')
         self.subreddits = ['politics','democrats','PoliticalHumor']
         self.platforms  = ["Twitter","RSS"]
-        self.currentPostID = 'b7a4db'
+        self.currentPostID = ''
         self.currentDate = (datetime.fromtimestamp(time.time())).strftime('%m %d %Y')
         self.reddit = praw.Reddit(client_id="soXdD-RwcsgTPA",
                              client_secret='BWLl9zDrpDrDDFc-OUqKYd-AD84',
@@ -79,7 +79,8 @@ class RedditBot():
         found = False
         for comment in currentSubmission.comments:
             # Check to make sure the comment is TheYangGangBot and the comment contains the subreddit
-            if comment.author == "TheYangGangBot" and str(' '.join(postSubmission.subreddit).upper()) in comment.body.upper():
+            commentSearchStr = ' ' + str(postSubmission.subreddit).upper()
+            if comment.author == "TheYangGangBot" and  commentSearchStr in comment.body.upper():
                 url = " https://np.reddit.com"+postSubmission.permalink
                 self.sendPrawCommand(comment.reply, url)
                 print("RedditBot: Making comment %s" % url)
@@ -139,20 +140,23 @@ class RedditBot():
         thread = Thread(target=rc.runCrawler)
         thread.start()
         while True:
-            print("RedditBot: Strarting Reddit bot")
-            if self.currentPostID == "":
-                self.makePost()
-            if self.currentDate != (datetime.fromtimestamp(time.time())).strftime('%m %d %Y'):
-                print("RedditBot: Starting a new Day!")
-                self.currentDate = (datetime.fromtimestamp(time.time())).strftime('%m %d %Y')
-                self.makePost()
-            else:
-                print("RedditBot: Searching DataBase")
-                self.searchDatabase()
-                self.getActiveUsers()
+            try:
+                print("RedditBot: Strarting Reddit bot")
+                if self.currentPostID == "":
+                    self.makePost()
+                if self.currentDate != (datetime.fromtimestamp(time.time())).strftime('%m %d %Y'):
+                    print("RedditBot: Starting a new Day!")
+                    self.currentDate = (datetime.fromtimestamp(time.time())).strftime('%m %d %Y')
+                    self.makePost()
+                else:
+                    print("RedditBot: Searching DataBase")
+                    self.searchDatabase()
+                    self.getActiveUsers()
 
-            print("RedditBot: Sleeping 15 minutes")
-            time.sleep(900)
+                print("RedditBot: Sleeping 15 minutes")
+                time.sleep(900)
+            except:
+                pass
         rc.running = False
 
 # unit test

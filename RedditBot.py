@@ -208,7 +208,7 @@ class RedditBot():
                     self.getActiveUsers()
 
                 print("RedditBot: Sleeping 10 minutes")
-                time.sleep(10)
+                time.sleep(600)
             except:
                 rc.running = False
                 tc.running = False

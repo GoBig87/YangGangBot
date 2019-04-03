@@ -9,6 +9,7 @@ class Post(mongoengine.Document):
     Platform   = mongoengine.StringField(default="Twitter")
     PostID     = mongoengine.StringField(required=True)
     PostAuthor = mongoengine.StringField(required=False)
+    PostText   = mongoengine.StringField(required=False)
     PostStatus = mongoengine.IntField(default=0)
 
 class TwitterCrawler():
@@ -37,8 +38,8 @@ class TwitterCrawler():
                 self.e = e
                 print(self.e)
                 while "Rate limit exceeded" in str(self.e):
-                    print("TwitterCrawler: Rate Limited Sleeping 30 seconds")
-                    time.sleep(30)
+                    print("TwitterCrawler: Rate Limited Sleeping 60 seconds")
+                    time.sleep(60)
                     try:
                         self.e = ''
                         tmpTweets = self.api.user_timeline(handle, tweet_mode="extended")
@@ -49,14 +50,14 @@ class TwitterCrawler():
             if tmpTweets is not None:
                 for tweet in tmpTweets:
                     if tweet.created_at.strftime('%m-%d-%Y') == startDate:
-                        if "YANG" in tweet.full_text.upper() and "CINDY" not in tweet.full_text.upper():
-                           postUrl = "https://twitter.com/"+handle.strip("@")+"/"+tweet.id_str
+                        if "YANG" in tweet.full_text.upper() and "CINDY" not in tweet.full_text.upper() and "PYONGYANG" not in tweet.full_text.upper() :
+                           postUrl = "https://twitter.com/"+handle.strip("@")+"/status/"+tweet.id_str
                             # Keep this like \sYANG.  The space weeds out things like Pyongyang
                            if Post.objects(PostID=postUrl):
                                 print("TwitterCrawler: Print Post already in DB")
                            else:
                                print("TwitterCrawler: %s" % tweet.full_text)
-                               post = Post(PostID=postUrl,PostAuthor=handle)
+                               post = Post(PostID=postUrl,PostAuthor=handle,PostText=tweet.full_text)
                                post.save()
 
         print("TwitterCrawler: Finished Twitter Search")
@@ -65,8 +66,8 @@ class TwitterCrawler():
         while self.running:
             self.searchTweets()
             #Sleep 10 minutes between crawls
-            print("TwitterCrawler: Sleeping 15 minute")
-            time.sleep(900)
+            print("TwitterCrawler: Sleeping 10 minute")
+            time.sleep(600)
 
 
 if __name__ == "__main__":

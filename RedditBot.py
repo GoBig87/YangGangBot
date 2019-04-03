@@ -6,11 +6,14 @@ from threading import Thread
 
 # my imports
 from RedditCrawler import RedditCrawler
+from TwitterCrawler import TwitterCrawler
 
 #This Class is the mongoDB structure
 class Post(mongoengine.Document):
     Platform = mongoengine.StringField(default="Reddit")
     PostID   = mongoengine.StringField(required=True)
+    PostAuthor = mongoengine.StringField(required=False)
+    PostText   = mongoengine.StringField(required=False)
     PostStatus = mongoengine.IntField(default=0)
 
 class UserCount(mongoengine.Document):
@@ -54,7 +57,8 @@ class RedditBot():
 
         # Catches rate limit error
         try:
-            submission = self.reddit.subreddit('YangForPresidentHQ').submit(postTitle, selftext=text)
+            #submission = self.reddit.subreddit('YangForPresidentHQ').submit(postTitle, selftext=text)
+            submission = self.reddit.subreddit('testingground4bots').submit(postTitle, selftext=text)
         except praw.exceptions.APIException as e:
             if e.error_type == "RATELIMIT":
                 print("RedditBot: Ratelimited, %s" % e.message)
@@ -76,24 +80,63 @@ class RedditBot():
         currentSubmission = self.reddit.submission(id=self.currentPostID)
         postSubmission = self.reddit.submission(id=postID)
         #Cycle through top level comments to find the right section to reply
+        topComment = False
         found = False
-        for comment in currentSubmission.comments:
-            # Check to make sure the comment is TheYangGangBot and the comment contains the subreddit
-            commentSearchStr = ' ' + str(postSubmission.subreddit).upper()
-            if comment.author == "TheYangGangBot" and  commentSearchStr in comment.body.upper():
-                url = " https://np.reddit.com"+postSubmission.permalink
-                self.sendPrawCommand(comment.reply, url)
-                print("RedditBot: Making comment %s" % url)
-                found = True
-        if not found:
-            reply = "Posts from %s" % postSubmission.subreddit
-            comment = self.sendPrawCommand(currentSubmission.reply,reply)
-            url = " https://np.reddit.com" + postSubmission.permalink
-            print("RedditBot: Making comment %s" % url)
-            self.sendPrawCommand(comment.reply,url)
+        for top_level_comment in currentSubmission.comments:
+            if top_level_comment.body == "Reddit":
+                for comment in top_level_comment.replies:
+                    # Check to make sure the comment is TheYangGangBot and the comment contains the subreddit
+                    commentSearchStr = ' ' + str(postSubmission.subreddit).upper()
+                    if comment.author == "TheYangGangBot" and  commentSearchStr in comment.body.upper():
+                        url = " https://np.reddit.com"+postSubmission.permalink
+                        self.sendPrawCommand(comment.reply, url)
+                        print("RedditBot: Making reddit comment %s" % url)
+                        found = True
+                if not found:
+                    reply = "Posts from r/%s" % postSubmission.subreddit
+                    com = self.sendPrawCommand(top_level_comment.reply,reply)
+                    url = " https://np.reddit.com" + postSubmission.permalink
+                    print("RedditBot: Making reddit comment %s" % url)
+                    self.sendPrawCommand(com.reply,url)
 
-    def makeTwitterComment(self):
-        pass
+        if not topComment:
+            replyPlatform = "Reddit"
+            commentPlatform = self.sendPrawCommand(currentSubmission.reply, replyPlatform)
+            replySub = "Posts from r/%s" % postSubmission.subreddit
+            commentSub = self.sendPrawCommand(commentPlatform.reply, replySub)
+            url = " https://np.reddit.com" + postSubmission.permalink
+            print("RedditBot: Making Reddit comment %s" % url)
+            self.sendPrawCommand(commentSub.reply, url)
+
+    def makeTwitterComment(self,postID,author,text):
+        currentSubmission = self.reddit.submission(id=self.currentPostID)
+        topComFound = False
+        found = False
+        for top_level_comment in currentSubmission.comments:
+            if top_level_comment.body == "Twitter":
+                topComFound = True
+                for comment in top_level_comment.replies:
+                    if author.upper() in comment.body.upper() and comment.author == "TheYangGangBot":
+                        commentText = str(text) + " " + postID
+                        self.sendPrawCommand(comment.reply, commentText)
+                        print("RedditBot: Making twitter comment under Author %s" % commentText)
+                        found = True
+                if not found:
+                    reply = "Tweets from %s" % author
+                    com = self.sendPrawCommand(top_level_comment.reply,reply)
+                    commentText = postID + " " + str(text)
+                    print("RedditBot: Making twitter comment with new author %s" % commentText)
+                    self.sendPrawCommand(com.reply,commentText)
+
+        if not topComFound:
+            replyPlatform = "Twitter"
+            commentPlatform = self.sendPrawCommand(currentSubmission.reply, replyPlatform)
+            replyAuthor = "Tweets from %s" % author
+            commentAuthor = self.sendPrawCommand(commentPlatform.reply, replyAuthor)
+            commentText = postID + " " + str(text)
+            print("RedditBot: Making twitter comment %s" % commentText)
+            self.sendPrawCommand(commentAuthor.reply, commentText)
+
 
     def searchDatabase(self):
         # searches all the posts in the database
@@ -105,7 +148,7 @@ class RedditBot():
                     post.update(PostStatus = 1)
                 if post.Platform == "Twitter":
                     print("RedditBot: Tweet Found")
-                    self.makeTwitterComment()
+                    self.makeTwitterComment(post.PostID,post.PostAuthor,post.PostText)
                     post.update(PostStatus=1)
 
     def getActiveUsers(self):
@@ -136,27 +179,32 @@ class RedditBot():
     # Run this function forever
     def run(self):
         rc = RedditCrawler()
-        thread = Thread(target=rc.runCrawler)
-        thread.start()
+        threadrc = Thread(target=rc.runCrawler)
+        threadrc.start()
+        tc = TwitterCrawler()
+        threadtc = Thread(target=tc.runCrawler)
+        threadtc.start()
         while True:
-            try:
-                print("RedditBot: Strarting Reddit bot")
-                if self.currentPostID == "":
-                    self.makePost()
-                if self.currentDate != (datetime.fromtimestamp(time.time())).strftime('%m %d %Y'):
-                    print("RedditBot: Starting a new Day!")
-                    self.currentDate = (datetime.fromtimestamp(time.time())).strftime('%m %d %Y')
-                    self.makePost()
-                else:
-                    print("RedditBot: Searching DataBase")
-                    self.searchDatabase()
-                    self.getActiveUsers()
+            #try:
+            print("RedditBot: Strarting Reddit bot")
+            if self.currentPostID == "":
+                self.makePost()
+            if self.currentDate != (datetime.fromtimestamp(time.time())).strftime('%m %d %Y'):
+                print("RedditBot: Starting a new Day!")
+                self.currentDate = (datetime.fromtimestamp(time.time())).strftime('%m %d %Y')
+                self.makePost()
+            else:
+                print("RedditBot: Searching DataBase")
+                self.searchDatabase()
+                self.getActiveUsers()
 
-                print("RedditBot: Sleeping 15 minutes")
-                time.sleep(900)
-            except:
-                pass
+            print("RedditBot: Sleeping 10 minutes")
+            time.sleep(30)
+            #time.sleep(600)
+            #except:
+            #    pass
         rc.running = False
+        tc.running = False
 
 # unit test
 if __name__ == "__main__":

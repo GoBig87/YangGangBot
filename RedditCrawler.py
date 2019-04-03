@@ -7,6 +7,7 @@ import time
 class Post(mongoengine.Document):
     Platform = mongoengine.StringField(default="Reddit")
     PostID   = mongoengine.StringField(required=True)
+    PostText = mongoengine.StringField(required=False)
     PostStatus = mongoengine.IntField(default=0)
 
 class RedditCrawler():
@@ -83,7 +84,7 @@ class RedditCrawler():
                 if postDate == currentDate:
                    currentSubmission = submission.title.upper()
                    # Keep this like \sYANG.  The space weeds out things like Pyongyang
-                   if " YANG" in submission.title.upper():
+                   if " YANG" in submission.title.upper() and "CINDY" not in submission.title.upper():
                        if Post.objects(PostID=submission.id).count():
                             print("RedditCrawler: Print Post already in DB")
                        else:
@@ -103,8 +104,8 @@ class RedditCrawler():
             try:
                 self.getPosts()
                 #Sleep 10 minutes between crawls
-                print("RedditCrawler: Sleeping 15 minute")
-                time.sleep(900)
+                print("RedditCrawler: Sleeping 10 minute")
+                time.sleep(600)
             except:
                 pass
 

@@ -34,9 +34,7 @@ class RedditBot():
     def __init__(self):
         # From mongoengine, connects to DB
         mongoengine.connect('yang_database')
-        self.subreddits = ['politics','democrats','PoliticalHumor']
-        self.platforms  = ["Twitter","RSS"]
-        self.currentPostID = ''
+        self.currentPostID = 'b8un1a'
         self.currentDate = (datetime.fromtimestamp(time.time())).strftime('%m %d %Y')
         self.reddit = praw.Reddit(client_id="soXdD-RwcsgTPA",
                              client_secret='BWLl9zDrpDrDDFc-OUqKYd-AD84',
@@ -49,7 +47,9 @@ class RedditBot():
         print("RedditBot: Making Daily Post")
         postTitle = "The Daily Andrew Yang Run Down %s " % self.currentDate
 
-        text = 'This post is a megapost that gets updated through ' \
+        text = 'Welcome to u/TheYangGangBot 2.0!  Now including twitter posts from over 3000' \
+               'of the top news feeds on twitter!  ' \
+               'This post is a megapost that gets updated through ' \
                'out the day whenever u/TheYangGangBot finds ' \
                'information on the internet and social media.' \
                ' When the bot finds information it will make a '\
@@ -94,13 +94,13 @@ class RedditBot():
                         print("RedditBot: Making reddit comment %s" % url)
                         found = True
                         break
-                if not found:
-                    reply = "Posts from r/%s" % postSubmission.subreddit
-                    com = self.sendPrawCommand(top_level_comment.reply,reply)
-                    url = " https://np.reddit.com" + postSubmission.permalink
-                    print("RedditBot: Making reddit comment %s" % url)
-                    self.sendPrawCommand(com.reply,url)
-                    found = True
+            if not found:
+                reply = "Posts from r/%s" % postSubmission.subreddit
+                com = self.sendPrawCommand(top_level_comment.reply,reply)
+                url = " https://np.reddit.com" + postSubmission.permalink
+                print("RedditBot: Making reddit comment %s" % url)
+                self.sendPrawCommand(com.reply,url)
+                found = True
             if found:
                 break
 
@@ -127,13 +127,13 @@ class RedditBot():
                         print("RedditBot: Making twitter comment under Author %s" % commentText)
                         found = True
                         break
-                if not found:
-                    reply = "Tweets from %s" % author
-                    com = self.sendPrawCommand(top_level_comment.reply,reply)
-                    commentText = postID + " " + str(text)
-                    print("RedditBot: Making twitter comment with new author %s" % commentText)
-                    self.sendPrawCommand(com.reply,commentText)
-                    found = True
+            if not found:
+                reply = "Tweets from %s" % author
+                com = self.sendPrawCommand(top_level_comment.reply,reply)
+                commentText = postID + " " + str(text)
+                print("RedditBot: Making twitter comment with new author %s" % commentText)
+                self.sendPrawCommand(com.reply,commentText)
+                found = True
             if found:
                 break
 
@@ -216,10 +216,10 @@ class RedditBot():
 
 # unit test
 if __name__ == "__main__":
-    from mongoengine import connect
-
-    db = connect('yang_database')
-    db.drop_database('yang_database')
+    # from mongoengine import connect
+    #
+    # db = connect('yang_database')
+    # db.drop_database('yang_database')
     rb =  RedditBot()
     rb.run()
 

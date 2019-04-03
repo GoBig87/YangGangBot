@@ -34,7 +34,7 @@ class RedditBot():
     def __init__(self):
         # From mongoengine, connects to DB
         mongoengine.connect('yang_database')
-        self.currentPostID = 'b8un1a'
+        self.currentPostID = ''
         self.currentDate = (datetime.fromtimestamp(time.time())).strftime('%m %d %Y')
         self.reddit = praw.Reddit(client_id="soXdD-RwcsgTPA",
                              client_secret='BWLl9zDrpDrDDFc-OUqKYd-AD84',

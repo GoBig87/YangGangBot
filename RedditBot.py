@@ -84,6 +84,7 @@ class RedditBot():
         found = False
         for top_level_comment in currentSubmission.comments:
             if top_level_comment.body == "Reddit":
+                topComment = True
                 for comment in top_level_comment.replies:
                     # Check to make sure the comment is TheYangGangBot and the comment contains the subreddit
                     commentSearchStr = ' ' + str(postSubmission.subreddit).upper()
@@ -92,12 +93,16 @@ class RedditBot():
                         self.sendPrawCommand(comment.reply, url)
                         print("RedditBot: Making reddit comment %s" % url)
                         found = True
+                        break
                 if not found:
                     reply = "Posts from r/%s" % postSubmission.subreddit
                     com = self.sendPrawCommand(top_level_comment.reply,reply)
                     url = " https://np.reddit.com" + postSubmission.permalink
                     print("RedditBot: Making reddit comment %s" % url)
                     self.sendPrawCommand(com.reply,url)
+                    found = True
+            if found:
+                break
 
         if not topComment:
             replyPlatform = "Reddit"
@@ -121,12 +126,16 @@ class RedditBot():
                         self.sendPrawCommand(comment.reply, commentText)
                         print("RedditBot: Making twitter comment under Author %s" % commentText)
                         found = True
+                        break
                 if not found:
                     reply = "Tweets from %s" % author
                     com = self.sendPrawCommand(top_level_comment.reply,reply)
                     commentText = postID + " " + str(text)
                     print("RedditBot: Making twitter comment with new author %s" % commentText)
                     self.sendPrawCommand(com.reply,commentText)
+                    found = True
+            if found:
+                break
 
         if not topComFound:
             replyPlatform = "Twitter"
@@ -185,28 +194,32 @@ class RedditBot():
         threadtc = Thread(target=tc.runCrawler)
         threadtc.start()
         while True:
-            #try:
-            print("RedditBot: Strarting Reddit bot")
-            if self.currentPostID == "":
-                self.makePost()
-            if self.currentDate != (datetime.fromtimestamp(time.time())).strftime('%m %d %Y'):
-                print("RedditBot: Starting a new Day!")
-                self.currentDate = (datetime.fromtimestamp(time.time())).strftime('%m %d %Y')
-                self.makePost()
-            else:
-                print("RedditBot: Searching DataBase")
-                self.searchDatabase()
-                self.getActiveUsers()
+            try:
+                print("RedditBot: Strarting Reddit bot")
+                if self.currentPostID == "":
+                    self.makePost()
+                if self.currentDate != (datetime.fromtimestamp(time.time())).strftime('%m %d %Y'):
+                    print("RedditBot: Starting a new Day!")
+                    self.currentDate = (datetime.fromtimestamp(time.time())).strftime('%m %d %Y')
+                    self.makePost()
+                else:
+                    print("RedditBot: Searching DataBase")
+                    self.searchDatabase()
+                    self.getActiveUsers()
 
-            print("RedditBot: Sleeping 10 minutes")
-            time.sleep(30)
-            #time.sleep(600)
-            #except:
-            #    pass
-        rc.running = False
-        tc.running = False
+                print("RedditBot: Sleeping 10 minutes")
+                time.sleep(10)
+            except:
+                rc.running = False
+                tc.running = False
+
 
 # unit test
 if __name__ == "__main__":
+    from mongoengine import connect
+
+    db = connect('yang_database')
+    db.drop_database('yang_database')
     rb =  RedditBot()
     rb.run()
+

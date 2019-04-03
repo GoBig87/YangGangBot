@@ -92,9 +92,6 @@ class RedditBot():
             print("RedditBot: Making comment %s" % url)
             self.sendPrawCommand(comment.reply,url)
 
-
-
-
     def makeTwitterComment(self):
         pass
 
@@ -107,7 +104,9 @@ class RedditBot():
                     self.makeSubRedditComment(post.PostID)
                     post.update(PostStatus = 1)
                 if post.Platform == "Twitter":
+                    print("RedditBot: Tweet Found")
                     self.makeTwitterComment()
+                    post.update(PostStatus=1)
 
     def getActiveUsers(self):
         timeList = datetime.fromtimestamp(time.time()).strftime('%m:%d:%Y:%H:%M').split(':')

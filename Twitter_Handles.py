@@ -284,7 +284,7 @@ handles = ["@nytimes",	"@maggieNYT",	"@lpolgreen",	"@brianstelter",	"@Sulliview"
            "@jmbacon",	"@brettmolina23",	"@Poynter",	"@caramrich",	"@alexptachick",	"@jmestepa",	"@MaryBowerman",
            "@LizSzabo",	"@alangomez",	"@NateSilver538",	"@bradheath",	"@MrRJervis",	"@khjelmgaard",	"@susmiller",	"@klawls",
            "@andrewpscott",	"@DavidMastio",	"@TweetBrentJones",	"@USATODAYmoney",	"@HollyTMoore",	"@CNN",	"@Reuters",	"@jswartz",
-           "@TrevorHughes",	"@fschouten",	"@soledadobrien",	"@POTUS",	"@jeffersongraham",	"@MrJohnRiley",	"@USATODAYcollege",
+           "@TrevorHughes",	"@fschouten",	"@soledadobrien",	"@POTUS",	"@jeffersongraham",	"@MrJohnRiley",
            "@johnhillkirk",	"@ShayTorie",	"@alisonannyoung",	"@WhiteHouse",	"@BerylLove",	"@realDonaldTrump",	"@TheOnion",
            "@ByRogerYu",	"@katiesmithallen",	"@wwcummings",	"@TimWGardner",	"@POTUS44",	"@JeffZillgitt",	"@lauramandaro",
            "@jguynn",	"@BySteveReilly",	"@BillClinton",	"@BBCBreaking",	"@Gannett",	"@NewYorker",	"@jaketapper",	"@StephenAtHome",

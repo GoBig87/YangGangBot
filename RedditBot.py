@@ -57,8 +57,8 @@ class RedditBot():
 
         # Catches rate limit error
         try:
-            #submission = self.reddit.subreddit('YangForPresidentHQ').submit(postTitle, selftext=text)
-            submission = self.reddit.subreddit('testingground4bots').submit(postTitle, selftext=text)
+            submission = self.reddit.subreddit('YangForPresidentHQ').submit(postTitle, selftext=text)
+            #submission = self.reddit.subreddit('testingground4bots').submit(postTitle, selftext=text)
         except praw.exceptions.APIException as e:
             if e.error_type == "RATELIMIT":
                 print("RedditBot: Ratelimited, %s" % e.message)

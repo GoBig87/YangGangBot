@@ -84,11 +84,11 @@ class RedditBot():
         topComment = False
         found = False
         for top_level_comment in currentSubmission.comments:
-            if str(top_level_comment.body) == "Reddit":
+            if str(top_level_comment.body) == "Reddit" and top_level_comment.author == "TheYangGangBot":
                 topComment = True
                 for comment in top_level_comment.replies:
                     # Check to make sure the comment is TheYangGangBot and the comment contains the subreddit
-                    commentSearchStr = ' ' + str(postSubmission.subreddit).upper()
+                    commentSearchStr = 'R/' + str(postSubmission.subreddit).upper()
                     if comment.author == "TheYangGangBot" and  commentSearchStr in comment.body.upper():
                         url = " https://np.reddit.com"+postSubmission.permalink
                         self.sendPrawCommand(comment.reply, url)
@@ -119,7 +119,7 @@ class RedditBot():
         topComFound = False
         found = False
         for top_level_comment in currentSubmission.comments:
-            if str(top_level_comment.body) == "Twitter":
+            if str(top_level_comment.body) == "Twitter" and top_level_comment.author == "TheYangGangBot":
                 topComFound = True
                 for comment in top_level_comment.replies:
                     if author.upper() in comment.body.upper() and comment.author == "TheYangGangBot":

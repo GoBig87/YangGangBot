@@ -47,8 +47,9 @@ class RedditBot():
         print("RedditBot: Making Daily Post")
         postTitle = "The Daily Andrew Yang Run Down %s " % self.currentDate
 
-        text = 'Welcome to u/TheYangGangBot 2.0!  Now including twitter posts from over 3000' \
-               'of the top news feeds on twitter!  ' \
+        text = 'Welcome to the downgraded u/TheYangGangBot 1.5!  ' \
+               'No longer will the bot search twitter until the ' \
+               'search algorithm and bugs are worked out. ' \
                'This post is a megapost that gets updated through ' \
                'out the day whenever u/TheYangGangBot finds ' \
                'information on the internet and social media.' \
@@ -57,8 +58,8 @@ class RedditBot():
 
         # Catches rate limit error
         try:
-            #submission = self.reddit.subreddit('YangForPresidentHQ').submit(postTitle, selftext=text)
-            submission = self.reddit.subreddit('testingground4bots').submit(postTitle, selftext=text)
+            submission = self.reddit.subreddit('YangForPresidentHQ').submit(postTitle, selftext=text)
+            #submission = self.reddit.subreddit('testingground4bots').submit(postTitle, selftext=text)
         except praw.exceptions.APIException as e:
             if e.error_type == "RATELIMIT":
                 print("RedditBot: Ratelimited, %s" % e.message)
@@ -83,7 +84,7 @@ class RedditBot():
         topComment = False
         found = False
         for top_level_comment in currentSubmission.comments:
-            if top_level_comment.body == "Reddit":
+            if str(top_level_comment.body) == "Reddit":
                 topComment = True
                 for comment in top_level_comment.replies:
                     # Check to make sure the comment is TheYangGangBot and the comment contains the subreddit
@@ -118,7 +119,7 @@ class RedditBot():
         topComFound = False
         found = False
         for top_level_comment in currentSubmission.comments:
-            if top_level_comment.body == "Twitter":
+            if str(top_level_comment.body) == "Twitter":
                 topComFound = True
                 for comment in top_level_comment.replies:
                     if author.upper() in comment.body.upper() and comment.author == "TheYangGangBot":
@@ -151,14 +152,14 @@ class RedditBot():
         # searches all the posts in the database
         for post in Post.objects:
             if post.PostStatus == 0:
-                if post.Platform == "Reddit":
+                if str(post.Platform) == "Reddit":
                     print("RedditBot: Reddit Post Found")
                     self.makeSubRedditComment(post.PostID)
                     post.update(PostStatus = 1)
-                if post.Platform == "Twitter":
-                    print("RedditBot: Tweet Found")
-                    self.makeTwitterComment(post.PostID,post.PostAuthor,post.PostText)
-                    post.update(PostStatus=1)
+                # if post.Platform == "Twitter":
+                #     print("RedditBot: Tweet Found")
+                #     self.makeTwitterComment(post.PostID,post.PostAuthor,post.PostText)
+                #     post.update(PostStatus=1)
 
     def getActiveUsers(self):
         timeList = datetime.fromtimestamp(time.time()).strftime('%m:%d:%Y:%H:%M').split(':')
@@ -190,9 +191,9 @@ class RedditBot():
         rc = RedditCrawler()
         threadrc = Thread(target=rc.runCrawler)
         threadrc.start()
-        tc = TwitterCrawler()
-        threadtc = Thread(target=tc.runCrawler)
-        threadtc.start()
+        # tc = TwitterCrawler()
+        # threadtc = Thread(target=tc.runCrawler)
+        # threadtc.start()
         while True:
             try:
                 print("RedditBot: Strarting Reddit bot")
@@ -211,7 +212,7 @@ class RedditBot():
                 time.sleep(600)
             except:
                 rc.running = False
-                tc.running = False
+                #tc.running = False
 
 
 # unit test

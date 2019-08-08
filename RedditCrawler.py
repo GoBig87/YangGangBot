@@ -16,7 +16,7 @@ class RedditCrawler():
         self.running = True
         mongoengine.connect('yang_database')
 
-        self.subreddits = ["asklibertarians", "classical_liberals",
+        self.subreddits = ["wayofthebern","asklibertarians", "classical_liberals",
                            "goldandblack", "libertarian", "libertariandebates",
                            "libertarianmeme", "libertarianpartyusa", "shitstatistssay",
                            "WorldNews","News","WorldPolitics","WorldEvents","Business",
@@ -84,13 +84,17 @@ class RedditCrawler():
                 if postDate == currentDate:
                    currentSubmission = submission.title.upper()
                    # Keep this like \sYANG.  The space weeds out things like Pyongyang
-                   if " YANG" in submission.title.upper() and "CINDY" not in submission.title.upper():
-                       if Post.objects(PostID=submission.id).count():
-                            print("RedditCrawler: Print Post already in DB")
+                   if "YANG" in submission.title.upper():
+                       print("RedditCrawler: Found Yang in %s" % submission.title)
+                       if "CINDY" not in submission.title.upper() and "PYONGYANG" not in submission.title.upper():
+                           if Post.objects(PostID=submission.id).count():
+                                print("RedditCrawler: Print Post already in DB")
+                           else:
+                               print("RedditCrawler: %s" % currentSubmission)
+                               post = Post(PostID=submission.id)
+                               post.save()
                        else:
-                           print("RedditCrawler: %s" % currentSubmission)
-                           post = Post(PostID=submission.id)
-                           post.save()
+                           print("RedditCrawler: Skipping %s" % submission.title)
                 else:
                     #Posts are no longer from today
                     break
@@ -106,9 +110,8 @@ class RedditCrawler():
                 #Sleep 10 minutes between crawls
                 print("RedditCrawler: Sleeping 10 minute")
                 time.sleep(600)
-            except:
-                pass
-
+            except Exception as e:
+                print(e)
 # unit test
 if __name__ == "__main__":
     rc =  RedditCrawler()

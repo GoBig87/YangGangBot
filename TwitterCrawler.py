@@ -25,6 +25,13 @@ class TwitterCrawler():
         auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
         auth.set_access_token(access_token, access_token_secret)
         self.api = tweepy.API(auth)
+        self.searchTerms = [
+                            'ANDREWYANG',
+                            'YANGGANG',
+                            'YANG2020',
+                            'ANDREW YANG',
+                            'YANG',
+        ]
 
     def searchTweets(self):
         startDate = datetime.fromtimestamp(time.time()).strftime('%m-%d-%Y')
@@ -50,24 +57,30 @@ class TwitterCrawler():
             if tmpTweets is not None:
                 for tweet in tmpTweets:
                     if tweet.created_at.strftime('%m-%d-%Y') == startDate:
-                        if "YANG" in tweet.full_text.upper() and "CINDY" not in tweet.full_text.upper() and "PYONGYANG" not in tweet.full_text.upper() :
-                           postUrl = "https://twitter.com/"+handle.strip("@")+"/status/"+tweet.id_str
-                            # Keep this like \sYANG.  The space weeds out things like Pyongyang
-                           if Post.objects(PostID=postUrl):
-                                print("TwitterCrawler: Print Post already in DB")
-                           else:
-                               print("TwitterCrawler: %s" % tweet.full_text)
-                               post = Post(PostID=postUrl,PostAuthor=handle,PostText=tweet.full_text)
-                               post.save()
+                        if "YANG" in tweet.full_text.upper():
+                           print("TwitterCrawler: Tweet found - %s" % tweet.full_text)
+                        #if " YANG" in tweet.full_text.upper() and "CINDY" not in tweet.full_text.upper() and "PYONGYANG" not in tweet.full_text.upper() :
+                           if "CINDY" not in tweet.full_text.upper() and "PYONGYANG" not in tweet.full_text.upper():
+                               postUrl = "https://twitter.com/"+handle.strip("@")+"/status/"+tweet.id_str
+                                # Keep this like \sYANG.  The space weeds out things like Pyongyang
+                               if Post.objects(PostID=postUrl):
+                                    print("TwitterCrawler: Print Post already in DB")
+                               else:
+                                   print("TwitterCrawler: %s" % tweet.full_text)
+                                   post = Post(PostID=postUrl,PostAuthor=handle,PostText=tweet.full_text)
+                                   post.save()
 
         print("TwitterCrawler: Finished Twitter Search")
 
     def runCrawler(self):
         while self.running:
-            self.searchTweets()
-            #Sleep 10 minutes between crawls
-            print("TwitterCrawler: Sleeping 10 minute")
-            time.sleep(600)
+            try:
+                self.searchTweets()
+                #Sleep 10 minutes between crawls
+                print("TwitterCrawler: Sleeping 10 minute")
+                time.sleep(600)
+            except Exception as e:
+                print(e)
 
 
 if __name__ == "__main__":
